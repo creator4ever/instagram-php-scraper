@@ -1938,6 +1938,23 @@ class Instagram
     }
 
     /**
+     * @param $session
+     *
+     * @return array
+     * @throws InstagramAuthException
+     */
+    public function loginWithSession($session)
+    {
+        if (!$this->isLoggedIn($session)) {
+            throw new InstagramAuthException('Login with session went wrong. Please report issue.');
+        } else {
+            $this->userSession = $session;
+        }
+
+        return $this->generateHeaders($this->userSession);
+    }
+
+    /**
      * @return string
      */
     private function getCacheKey()
@@ -2074,6 +2091,9 @@ class Instagram
      */
     public function saveSession($ttl = null)
     {
+        if(!$ttl){
+            $ttl = @$this->userSession['expires']  ? (strtotime($this->userSession['expires']) - time() ) : null;
+        }
         static::$instanceCache->set($this->getCacheKey(), $this->userSession, $ttl);
     }
 
