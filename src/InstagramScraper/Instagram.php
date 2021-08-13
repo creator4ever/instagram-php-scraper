@@ -632,7 +632,11 @@ class Instagram
                 throw new InstagramNotFoundException('Account with given id does not exist.');
             }
             if (static::HTTP_OK !== $response->code) {
-                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+                $msg = 'Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.';
+                if(static::HTTP_FOUND === $response->code){
+                    $msg .= ' Redirect to '. $response->headers['Location'][0];
+                }
+                throw new InstagramException($msg, $response->code);
             }
 
             $arr = $this->decodeRawBodyToJson($response->raw_body);
@@ -1847,6 +1851,8 @@ class Instagram
                 $response = Request::get($response->headers['Location'][0]);
             }
             if ($response->code !== static::HTTP_OK) {
+                // expire session
+                static::$instanceCache->set($this->getCacheKey(), null);
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
             preg_match('/"csrf_token":"(.*?)"/', $response->body, $match);
