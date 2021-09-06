@@ -1946,7 +1946,8 @@ class Instagram
     public function loginWithSession($session)
     {
         if (!$this->isLoggedIn($session)) {
-            throw new InstagramAuthException('Login with session went wrong. Please report issue.');
+            // throw new InstagramAuthException('Login with session went wrong. Please report issue.');
+            return false;
         } else {
             $this->userSession = $session;
         }
@@ -1982,7 +1983,13 @@ class Instagram
             'user-agent' => $this->getUserAgent(),
         ];
         $response = Request::get(Endpoints::BASE_URL, $headers);
-        if ($response->code !== static::HTTP_OK) {
+        if ($response->code == static::HTTP_FOUND) {
+            $response = Request::get($response->headers['Location'][0]);
+        }
+        if ($response->code == static::HTTP_FOUND) {
+            $response = Request::get($response->headers['Location'][0]);
+        }
+        if ($response->code !== static::HTTP_OK) {        
             return false;
         }
         $cookies = $this->parseCookies($response->headers);
